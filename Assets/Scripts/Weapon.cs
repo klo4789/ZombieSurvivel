@@ -5,6 +5,7 @@ using UnityEngine;
 public class Weapon : MonoBehaviour
 {
     public Camera playerCamera;
+
     //슈팅
     public bool isShooting, readyToShoot;
     bool allowReset = true;
@@ -14,10 +15,10 @@ public class Weapon : MonoBehaviour
     public int bulletsPerBurst = 3;
     public int currentBurst;
 
-    //Spread
+    //탄 퍼짐
     public float spreadIntensity;
 
-    //Bullet
+    //총알
     public GameObject bulletPrefab;
     public Transform bulletSpawn;
     public float bulletVelocity = 30f;
@@ -37,19 +38,21 @@ public class Weapon : MonoBehaviour
         readyToShoot = true;
         currentBurst = bulletsPerBurst;
     }
+
     void Update()
     {
         if (currentShootingMode == ShootingMode.Auto)
         {
-            // Holding Down Left Mouse Button
+            // 마우스 왼쪽 버튼 홀드
             isShooting = Input.GetKey(KeyCode.Mouse0);
         }
-        else if(currentShootingMode == ShootingMode.Single || currentShootingMode == ShootingMode.Burst)
+        else if (currentShootingMode == ShootingMode.Single || currentShootingMode == ShootingMode.Burst)
         {
-            //Chcking Left Mouse Button Once
+            // 마우스 왼쪽 버튼 한 번 클릭
             isShooting = Input.GetKeyDown(KeyCode.Mouse0);
-        }    
-        if(readyToShoot && isShooting)
+        }
+
+        if (readyToShoot && isShooting)
         {
             currentBurst = bulletsPerBurst;
             FireWeapon();
@@ -59,15 +62,17 @@ public class Weapon : MonoBehaviour
     private void FireWeapon()
     {
         readyToShoot = false;
-
         Vector3 shootingDirection = CalculateDirectionAndSpread().normalized;
 
         //총알 생성하기
         GameObject bullet = Instantiate(bulletPrefab, bulletSpawn.position, Quaternion.identity);
-        //Poiting the bullet to face the shooting direction
+
+        //총알이 발사 방향을 향하도록 설정
         bullet.transform.forward = shootingDirection;
+
         //총알 발사하기
-        bullet.GetComponent<Rigidbody>().AddForce(bulletSpawn.forward.normalized * bulletVelocity, ForceMode.Impulse);
+        bullet.GetComponent<Rigidbody>().AddForce(shootingDirection * bulletVelocity, ForceMode.Impulse);
+
         //일정 시간이 지나면 총알 삭제
         StartCoroutine(DestroyBulletAfterTime(bullet, bulletPrefabLifeTime));
 
@@ -83,20 +88,22 @@ public class Weapon : MonoBehaviour
         readyToShoot = true;
         allowReset = true;
     }
+
     public Vector3 CalculateDirectionAndSpread()
     {
+        // 화면 중앙에서 Ray 발사
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
-
         Vector3 targetPoint;
+
         if (Physics.Raycast(ray, out hit))
         {
-            //Hitting Something
+            // 무언가를 맞춤
             targetPoint = hit.point;
         }
         else
         {
-            //Shooting at the air
+            // 허공에 발사
             targetPoint = ray.GetPoint(100);
         }
 
@@ -105,7 +112,7 @@ public class Weapon : MonoBehaviour
         float x = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
         float y = UnityEngine.Random.Range(-spreadIntensity, spreadIntensity);
 
-        //Returning the shooting direction and spread
+        // 발사 방향과 탄 퍼짐 반환
         return direction + new Vector3(x, y, 0);
     }
 
@@ -113,5 +120,5 @@ public class Weapon : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         Destroy(bullet);
-    }    
+    }
 }
