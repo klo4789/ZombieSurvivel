@@ -31,8 +31,6 @@ public class Weapon : MonoBehaviour
     public int magazineSize, bulletsLeft;
     public bool isReloading;
 
-    //UI
-    public TextMeshProUGUI ammoDisplay;
 
     public enum ShootingMode
     {
@@ -54,6 +52,11 @@ public class Weapon : MonoBehaviour
 
     void Update()
     {
+        if (bulletsLeft == 0 && isShooting)
+        {
+            SoundManager.Instance.emptyManagizeSoundM1911.Play();
+        }
+
         if (currentShootingMode == ShootingMode.Auto)
         {
             // 마우스 왼쪽 버튼 홀드
@@ -70,21 +73,21 @@ public class Weapon : MonoBehaviour
             Reload();
         }
 
-        //If you want to automatically reload when magazine is empty
-        if (readyToShoot && isShooting && isReloading == false && bulletsLeft <= 0)
+        //탄창이 비면 자동으로 재장전
+        if (bulletsLeft <= 0 && !isReloading)
         {
-            Reload();
+            //Reload();
         }
 
-        if (readyToShoot && isShooting)
+        if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
         {
             currentBurst = bulletsPerBurst;
             FireWeapon();
         }
 
-        if (ammoDisplay != null)
+        if (AmmoManager.Instance.ammoDisplay != null)
         {
-            ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
+            AmmoManager.Instance.ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
         }
     }
     private void FireWeapon()
@@ -120,6 +123,10 @@ public class Weapon : MonoBehaviour
 
     private void Reload()
     {
+        SoundManager.Instance.reloadingSoundM1911.Play();
+
+        animator.SetTrigger("Reload");
+
         isReloading = true;
         Invoke("ReloadCompleted", reloadTime);
     }

@@ -7,6 +7,8 @@ public class SoundManager : MonoBehaviour
     public static SoundManager Instance { get; set; }
 
     public AudioSource shootingSoundM1911;
+    public AudioSource reloadingSoundM1911;
+    public AudioSource emptyManagizeSoundM1911;
 
     private void Awake()
     {
