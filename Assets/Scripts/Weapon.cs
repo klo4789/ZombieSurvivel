@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
+    public bool isActiveWeapon;
+
     //슈팅
     public bool isShooting, readyToShoot;
     bool allowReset = true;
@@ -24,12 +26,23 @@ public class Weapon : MonoBehaviour
     public float bulletPrefabLifeTime = 3f;
 
     public GameObject muzzleEffect;
-    private Animator animator;
+    internal Animator animator;
 
     //로딩
     public float reloadTime;
     public int magazineSize, bulletsLeft;
     public bool isReloading;
+
+    public Vector3 spawnPosition;
+    public Vector3 spawnRotation;
+
+    public enum WeaponModel
+    {
+        M1911,
+        AK74
+    }
+
+    public WeaponModel thisWeaponModel;
 
 
     public enum ShootingMode
@@ -52,42 +65,48 @@ public class Weapon : MonoBehaviour
 
     void Update()
     {
-        if (bulletsLeft == 0 && isShooting)
+        if (isActiveWeapon)
         {
-            SoundManager.Instance.emptyManagizeSoundM1911.Play();
-        }
 
-        if (currentShootingMode == ShootingMode.Auto)
-        {
-            // 마우스 왼쪽 버튼 홀드
-            isShooting = Input.GetKey(KeyCode.Mouse0);
-        }
-        else if (currentShootingMode == ShootingMode.Single || currentShootingMode == ShootingMode.Burst)
-        {
-            // 마우스 왼쪽 버튼 한 번 클릭
-            isShooting = Input.GetKeyDown(KeyCode.Mouse0);
-        }
+            GetComponent<Outline>().enabled = false;
 
-        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false)
-        {
-            Reload();
-        }
+            if (bulletsLeft == 0 && isShooting)
+            {
+                SoundManager.Instance.emptyManagizeSoundM1911.Play();
+            }
 
-        //탄창이 비면 자동으로 재장전
-        if (bulletsLeft <= 0 && !isReloading)
-        {
-            //Reload();
-        }
+            if (currentShootingMode == ShootingMode.Auto)
+            {
+                // 마우스 왼쪽 버튼 홀드
+                isShooting = Input.GetKey(KeyCode.Mouse0);
+            }
+            else if (currentShootingMode == ShootingMode.Single || currentShootingMode == ShootingMode.Burst)
+            {
+                // 마우스 왼쪽 버튼 한 번 클릭
+                isShooting = Input.GetKeyDown(KeyCode.Mouse0);
+            }
 
-        if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
-        {
-            currentBurst = bulletsPerBurst;
-            FireWeapon();
-        }
+            if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && isReloading == false)
+            {
+                Reload();
+            }
 
-        if (AmmoManager.Instance.ammoDisplay != null)
-        {
-            AmmoManager.Instance.ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize / bulletsPerBurst}";
+            //탄창이 비면 자동으로 재장전
+            if (bulletsLeft <= 0 && !isReloading)
+            {
+                //Reload();
+            }
+
+            if (readyToShoot && isShooting && !isReloading && bulletsLeft > 0)
+            {
+                currentBurst = bulletsPerBurst;
+                FireWeapon();
+            }
+
+            if (AmmoManager.Instance.ammoDisplay != null)
+            {
+                AmmoManager.Instance.ammoDisplay.text = $"{bulletsLeft / bulletsPerBurst}/{magazineSize/bulletsPerBurst}";
+            }
         }
     }
     private void FireWeapon()
@@ -97,7 +116,8 @@ public class Weapon : MonoBehaviour
         muzzleEffect.GetComponent<ParticleSystem>().Play();
         animator.SetTrigger("Recoil");
 
-        SoundManager.Instance.shootingSoundM1911.Play();
+        //SoundManager.Instance.shootingSoundM1911.Play();  
+        SoundManager.Instance.PlayShootingSound(thisWeaponModel);
 
         readyToShoot = false;
         Vector3 shootingDirection = CalculateDirectionAndSpread().normalized;
@@ -123,7 +143,7 @@ public class Weapon : MonoBehaviour
 
     private void Reload()
     {
-        SoundManager.Instance.reloadingSoundM1911.Play();
+        SoundManager.Instance.PlayReloadSound(thisWeaponModel);
 
         animator.SetTrigger("Reload");
 
